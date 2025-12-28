@@ -3,6 +3,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Security;
 using API.DTOs.Customers;
+using API.DTOs.Common;
 using Microsoft.EntityFrameworkCore;
 using Application.Common;
 
@@ -50,9 +51,10 @@ public class CustomerService : ICustomerService
         });
     }
 
-    public async Task<ServiceResult<IEnumerable<CustomerResponse>>> GetAllAsync()
+    public async Task<ServiceResult<PaginatedResponse<CustomerResponse>>> GetAllAsync(PaginationRequest paginationRequest)
     {
-        var customers = await _context.Customers
+        // Build the query for customers with their user data
+        var query = _context.Customers
             .Include(c => c.User)
             .Select(c => new CustomerResponse
             {
@@ -63,9 +65,11 @@ public class CustomerService : ICustomerService
                 Active = c.User.Active,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt
-            })
-            .ToListAsync();
+            });
 
-        return ServiceResult.Ok<IEnumerable<CustomerResponse>>(customers);
+        // Apply pagination using our extension method
+        var paginatedResult = await query.ToPaginatedResponseAsync(paginationRequest);
+
+        return ServiceResult.Ok(paginatedResult);
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using API.DTOs.Customers;
+using API.DTOs.Common;
 using API.Validators;
 using Application.Customers;
 using Infrastructure.Persistence;
@@ -37,9 +38,9 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetCustomers()
+    public async Task<IActionResult> GetCustomers([FromQuery] PaginationRequest paginationRequest)
     {
-        var result = await _customerService.GetAllAsync();
+        var result = await _customerService.GetAllAsync(paginationRequest);
         if (!result.Success)
             return BadRequest(result.ErrorMessage);
 

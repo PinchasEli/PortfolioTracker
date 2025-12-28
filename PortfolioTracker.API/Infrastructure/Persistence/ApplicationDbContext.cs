@@ -27,8 +27,8 @@ public class ApplicationDbContext : DbContext
             .HasQueryFilter(u => !u.IsDeleted);
 
         // Temporarily disabled query filter for debugging
-        // modelBuilder.Entity<Customer>()
-        //     .HasQueryFilter(c => !c.IsDeleted);
+        modelBuilder.Entity<Customer>()
+            .HasQueryFilter(c => !c.IsDeleted);
 
         modelBuilder.Entity<Customer>()
             .HasMany(c => c.Portfolios)

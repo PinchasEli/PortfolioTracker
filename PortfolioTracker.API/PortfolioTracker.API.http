@@ -1,6 +1,39 @@
 @PortfolioTracker.API_HostAddress = http://localhost:5257
 
-GET {{PortfolioTracker.API_HostAddress}}/weatherforecast/
+###
+
+# Create a customer
+POST {{PortfolioTracker.API_HostAddress}}/api/customers
+Content-Type: application/json
+
+{
+  "fullName": "John Doe",
+  "email": "john@example.com",
+  "password": "SecurePassword123!"
+}
+
+###
+
+# Get customers - default pagination (page 1, 10 items)
+GET {{PortfolioTracker.API_HostAddress}}/api/customers
+Accept: application/json
+
+###
+
+# Get customers - page 1, 5 items per page
+GET {{PortfolioTracker.API_HostAddress}}/api/customers?pageNumber=1&pageSize=5
+Accept: application/json
+
+###
+
+# Get customers - page 2, 5 items per page
+GET {{PortfolioTracker.API_HostAddress}}/api/customers?pageNumber=2&pageSize=5
+Accept: application/json
+
+###
+
+# Get customers - large page size (will be capped at 100)
+GET {{PortfolioTracker.API_HostAddress}}/api/customers?pageNumber=1&pageSize=500
 Accept: application/json
 
 ###
