@@ -93,4 +93,87 @@ public class CustomerService : ICustomerService
             UpdatedAt = customer.UpdatedAt
         });
     }
+
+    public async Task<ServiceResult<CustomerResponse>> UpdateAsync(Guid id, UpdateCustomerRequest request)
+    {
+        var customer = await _context.Customers
+            .Include(c => c.User)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (customer == null)
+            return ServiceResult.Fail<CustomerResponse>("Customer not found");
+
+        // Check if email is being changed and if new email already exists
+        if (customer.User.Email != request.Email)
+        {
+            var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email && u.Id != customer.UserId);
+            if (emailExists)
+                return ServiceResult.Fail<CustomerResponse>("Email already exists");
+        }
+
+        // Update customer fields
+        customer.FullName = request.FullName;
+        customer.User.Email = request.Email;
+        customer.User.Active = request.Active;
+
+        await _context.SaveChangesAsync();
+
+        return ServiceResult.Ok(new CustomerResponse
+        {
+            Id = customer.Id,
+            FullName = customer.FullName,
+            Email = customer.User.Email,
+            Role = customer.User.Role.ToString(),
+            Active = customer.User.Active,
+            CreatedAt = customer.CreatedAt,
+            UpdatedAt = customer.UpdatedAt
+        });
+    }
+
+    public async Task<ServiceResult<CustomerResponse>> PatchAsync(Guid id, PatchCustomerRequest request)
+    {
+        var customer = await _context.Customers
+            .Include(c => c.User)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (customer == null)
+            return ServiceResult.Fail<CustomerResponse>("Customer not found");
+
+        // Only update fields that are provided (not null)
+        if (request.FullName != null)
+        {
+            customer.FullName = request.FullName;
+        }
+
+        if (request.Email != null)
+        {
+            // Check if email is being changed and if new email already exists
+            if (customer.User.Email != request.Email)
+            {
+                var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email && u.Id != customer.UserId);
+                if (emailExists)
+                    return ServiceResult.Fail<CustomerResponse>("Email already exists");
+            }
+
+            customer.User.Email = request.Email;
+        }
+
+        if (request.Active.HasValue)
+        {
+            customer.User.Active = request.Active.Value;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return ServiceResult.Ok(new CustomerResponse
+        {
+            Id = customer.Id,
+            FullName = customer.FullName,
+            Email = customer.User.Email,
+            Role = customer.User.Role.ToString(),
+            Active = customer.User.Active,
+            CreatedAt = customer.CreatedAt,
+            UpdatedAt = customer.UpdatedAt
+        });
+    }
 }

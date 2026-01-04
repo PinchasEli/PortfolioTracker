@@ -56,4 +56,38 @@ public class CustomersController : ControllerBase
 
         return Ok(result.Data);
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(Guid id, UpdateCustomerRequest request)
+    {
+        var validator = new UpdateCustomerRequestValidator();
+        var validationResult = validator.Validate(request);
+
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var result = await _customerService.UpdateAsync(id, request);
+
+        if (!result.Success)
+            return BadRequest(result.ErrorMessage);
+
+        return Ok(result.Data);
+    }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> Patch(Guid id, PatchCustomerRequest request)
+    {
+        var validator = new PatchCustomerRequestValidator();
+        var validationResult = validator.Validate(request);
+
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var result = await _customerService.PatchAsync(id, request);
+
+        if (!result.Success)
+            return BadRequest(result.ErrorMessage);
+
+        return Ok(result.Data);
+    }
 }
