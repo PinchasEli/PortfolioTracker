@@ -46,4 +46,14 @@ public class CustomersController : ControllerBase
 
         return Ok(result.Data);
     }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetCustomerById(Guid id)
+    {
+        var result = await _customerService.GetByIdAsync(id);
+        if (!result.Success)
+            return NotFound(result.ErrorMessage);
+
+        return Ok(result.Data);
+    }
 }

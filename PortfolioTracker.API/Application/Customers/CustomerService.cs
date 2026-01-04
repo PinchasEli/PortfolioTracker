@@ -72,4 +72,25 @@ public class CustomerService : ICustomerService
 
         return ServiceResult.Ok(paginatedResult);
     }
+
+    public async Task<ServiceResult<CustomerResponse>> GetByIdAsync(Guid id)
+    {
+        var customer = await _context.Customers
+            .Include(c => c.User)
+            .FirstOrDefaultAsync(c => c.Id == id);
+            
+        if (customer == null)
+            return ServiceResult.Fail<CustomerResponse>("Customer not found");
+
+        return ServiceResult.Ok(new CustomerResponse
+        {
+            Id = customer.Id,
+            FullName = customer.FullName,
+            Email = customer.User.Email,
+            Role = customer.User.Role.ToString(),
+            Active = customer.User.Active,
+            CreatedAt = customer.CreatedAt,
+            UpdatedAt = customer.UpdatedAt
+        });
+    }
 }
