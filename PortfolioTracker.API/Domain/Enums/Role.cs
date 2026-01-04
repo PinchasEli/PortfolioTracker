@@ -2,8 +2,8 @@ namespace Domain.Enums;
 
 public enum Role
 {
-    Customer = 1,
-    Admin = 2,
-    SuperAdmin = 3
+    Customer = 0,
+    Admin = 1,
+    SuperAdmin = 2
 }
 

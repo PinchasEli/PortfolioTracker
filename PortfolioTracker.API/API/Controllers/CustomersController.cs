@@ -4,13 +4,13 @@ using API.DTOs.Customers;
 using API.DTOs.Common;
 using API.Validators;
 using Application.Customers;
-using Infrastructure.Persistence;
+using Infrastructure.Authorization;
 
 namespace API.Controllers;
 
 [ApiController]
 [Route("api/customers")]
-[Authorize] // Require authentication for all endpoints in this controller
+[Authorize] // require authentication for all endpoints in this controller
 public class CustomersController : ControllerBase
 {
     private readonly ILogger<CustomersController> _logger;
@@ -22,7 +22,11 @@ public class CustomersController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Create a new customer - Requires Admin or SuperAdmin role
+    /// </summary>
     [HttpPost]
+    [Authorize(Policy = RolePolicies.RequireAdmin)]
     public async Task<IActionResult> Create(CreateCustomerRequest request)
     {
         var validator = new CreateCustomerRequestValidator();
@@ -39,7 +43,11 @@ public class CustomersController : ControllerBase
         return Ok(result.Data);
     }
 
+    /// <summary>
+    /// Get all customers - Requires at least Customer role
+    /// </summary>
     [HttpGet]
+    [Authorize(Policy = RolePolicies.RequireAdmin)]
     public async Task<IActionResult> GetCustomers([FromQuery] PaginationRequest paginationRequest)
     {
         var result = await _customerService.GetAllAsync(paginationRequest);
@@ -49,7 +57,11 @@ public class CustomersController : ControllerBase
         return Ok(result.Data);
     }
 
+    /// <summary>
+    /// Get customer by ID - Requires at least Customer role
+    /// </summary>
     [HttpGet("{id}")]
+    [Authorize(Policy = RolePolicies.RequireCustomer)]
     public async Task<IActionResult> GetCustomerById(Guid id)
     {
         var result = await _customerService.GetByIdAsync(id);
@@ -59,7 +71,11 @@ public class CustomersController : ControllerBase
         return Ok(result.Data);
     }
 
+    /// <summary>
+    /// Update customer - Requires Admin or SuperAdmin role
+    /// </summary>
     [HttpPut("{id}")]
+    [Authorize(Policy = RolePolicies.RequireAdmin)]
     public async Task<IActionResult> Update(Guid id, UpdateCustomerRequest request)
     {
         var validator = new UpdateCustomerRequestValidator();
@@ -76,7 +92,11 @@ public class CustomersController : ControllerBase
         return Ok(result.Data);
     }
 
+    /// <summary>
+    /// Partially update customer - Requires Admin or SuperAdmin role
+    /// </summary>
     [HttpPatch("{id}")]
+    [Authorize(Policy = RolePolicies.RequireAdmin)]
     public async Task<IActionResult> Patch(Guid id, PatchCustomerRequest request)
     {
         var validator = new PatchCustomerRequestValidator();

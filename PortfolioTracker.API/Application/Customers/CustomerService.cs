@@ -12,10 +12,14 @@ namespace Application.Customers;
 public class CustomerService : ICustomerService
 {
     private readonly ApplicationDbContext _context;
+    private readonly Infrastructure.Authorization.IAuthorizationService _authService;
 
-    public CustomerService(ApplicationDbContext context)
+    public CustomerService(
+        ApplicationDbContext context,
+        Infrastructure.Authorization.IAuthorizationService authService)
     {
         _context = context;
+        _authService = authService;
     }
 
     public async Task<ServiceResult<CustomerResponse>> CreateAsync(CreateCustomerRequest request)
@@ -75,10 +79,18 @@ public class CustomerService : ICustomerService
 
     public async Task<ServiceResult<CustomerResponse>> GetByIdAsync(Guid id)
     {
-        var customer = await _context.Customers
+        var currentUserId = _authService.GetCurrentUserId();
+        var isAdminOrAbove = _authService.IsAtLeastRole(Role.Admin);
+
+        var query = _context.Customers
             .Include(c => c.User)
-            .FirstOrDefaultAsync(c => c.Id == id);
-            
+            .Where(c => c.Id == id);
+
+        if (!isAdminOrAbove)
+            query = query.Where(c => c.UserId == currentUserId);
+        
+        var customer = await query.FirstOrDefaultAsync();
+
         if (customer == null)
             return ServiceResult.Fail<CustomerResponse>("Customer not found");
 

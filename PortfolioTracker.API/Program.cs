@@ -1,14 +1,17 @@
 using Infrastructure.Persistence;
 using Infrastructure.Security;
+using Infrastructure.Authorization;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Application.Customers;
 using Application.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using Domain.Enums;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,12 +83,41 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+// Add Authorization with Role-Based Policies
+builder.Services.AddAuthorization(options =>
+{
+    // Exact role policies
+    options.AddPolicy(RolePolicies.CustomerOnly, policy =>
+        policy.Requirements.Add(new RoleRequirement(new[] { Role.Customer }, isHierarchical: false)));
+    
+    options.AddPolicy(RolePolicies.AdminOnly, policy =>
+        policy.Requirements.Add(new RoleRequirement(new[] { Role.Admin }, isHierarchical: false)));
+    
+    options.AddPolicy(RolePolicies.SuperAdminOnly, policy =>
+        policy.Requirements.Add(new RoleRequirement(new[] { Role.SuperAdmin }, isHierarchical: false)));
+    
+    // Hierarchical policies (user must be at least this role)
+    options.AddPolicy(RolePolicies.RequireCustomer, policy =>
+        policy.Requirements.Add(new RoleRequirement(new[] { Role.Customer }, isHierarchical: true)));
+    
+    options.AddPolicy(RolePolicies.RequireAdmin, policy =>
+        policy.Requirements.Add(new RoleRequirement(new[] { Role.Admin }, isHierarchical: true)));
+    
+    options.AddPolicy(RolePolicies.RequireSuperAdmin, policy =>
+        policy.Requirements.Add(new RoleRequirement(new[] { Role.SuperAdmin }, isHierarchical: true)));
+});
+
+// Register Authorization Handler
+builder.Services.AddSingleton<IAuthorizationHandler, RoleRequirementHandler>();
+
+// Add HttpContextAccessor for authorization service
+builder.Services.AddHttpContextAccessor();
 
 // Add Application Services
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddScoped<Infrastructure.Authorization.IAuthorizationService, Infrastructure.Authorization.AuthorizationService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 Console.WriteLine($"=== CONNECTION STRING: {connectionString} ===");
