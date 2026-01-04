@@ -37,3 +37,67 @@ GET {{PortfolioTracker.API_HostAddress}}/api/customers?pageNumber=1&pageSize=500
 Accept: application/json
 
 ###
+
+# Get customer by ID
+# Replace with actual GUID from create response
+GET {{PortfolioTracker.API_HostAddress}}/api/customers/{CUSTOMER_ID}
+Accept: application/json
+
+###
+
+# ========== UPDATE ENDPOINTS ==========
+
+# PUT - Full update (all fields required)
+# Replace {CUSTOMER_ID} with actual customer GUID
+PUT {{PortfolioTracker.API_HostAddress}}/api/customers/{CUSTOMER_ID}
+Content-Type: application/json
+
+{
+  "fullName": "John Doe Updated",
+  "email": "john.updated@example.com",
+  "active": true
+}
+
+###
+
+# PATCH - Partial update (only update full name)
+PATCH {{PortfolioTracker.API_HostAddress}}/api/customers/{CUSTOMER_ID}
+Content-Type: application/json
+
+{
+  "fullName": "John Doe Patched"
+}
+
+###
+
+# PATCH - Partial update (only update email)
+PATCH {{PortfolioTracker.API_HostAddress}}/api/customers/{CUSTOMER_ID}
+Content-Type: application/json
+
+{
+  "email": "john.patched@example.com"
+}
+
+###
+
+# PATCH - Partial update (only update active status)
+PATCH {{PortfolioTracker.API_HostAddress}}/api/customers/{CUSTOMER_ID}
+Content-Type: application/json
+
+{
+  "active": false
+}
+
+###
+
+# PATCH - Update multiple fields
+PATCH {{PortfolioTracker.API_HostAddress}}/api/customers/{CUSTOMER_ID}
+Content-Type: application/json
+
+{
+  "fullName": "Jane Smith",
+  "email": "jane.smith@example.com",
+  "active": true
+}
+
+###

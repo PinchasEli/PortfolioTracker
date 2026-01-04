@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using API.DTOs.Customers;
 using API.DTOs.Common;
 using API.Validators;
@@ -9,6 +10,7 @@ namespace API.Controllers;
 
 [ApiController]
 [Route("api/customers")]
+[Authorize] // Require authentication for all endpoints in this controller
 public class CustomersController : ControllerBase
 {
     private readonly ILogger<CustomersController> _logger;
