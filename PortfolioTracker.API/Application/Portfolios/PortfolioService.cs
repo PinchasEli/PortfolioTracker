@@ -152,4 +152,42 @@ public class PortfolioService : IPortfolioService
             UpdatedAt = portfolio.UpdatedAt
         });
     }
+
+    public async Task<ServiceResult<PortfolioResponse>> PatchAsync(Guid customerId, Guid portfolioId, PatchPortfolioRequest request)
+    {
+        // Validate customer access
+        var validationResult = await ValidateCustomerAccessAsync(customerId);
+        if (!validationResult.Success)
+            return ServiceResult.Fail<PortfolioResponse>(validationResult.ErrorMessage!, validationResult.StatusCode ?? 400);
+
+        var customer = validationResult.Data!;
+
+        var portfolio = await _context.Portfolios.FirstOrDefaultAsync(p => p.Id == portfolioId && p.CustomerId == customerId);
+        if (portfolio == null)
+            return ServiceResult.Fail<PortfolioResponse>("Portfolio not found", 404);
+
+        if (request.Name != null)
+            portfolio.Name = request.Name;
+
+        if (request.Active != null)
+        {
+            if (!_authService.IsAtLeastRole(Role.Admin))
+                return ServiceResult.Fail<PortfolioResponse>("Access denied", 403);
+            
+            portfolio.Active = request.Active.Value;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return ServiceResult.Ok(new PortfolioResponse
+        {
+            Id = portfolio.Id,
+            Name = portfolio.Name,
+            Exchange = portfolio.Exchange,
+            BaseCurrency = portfolio.BaseCurrency,
+            Active = portfolio.Active,
+            CreatedAt = portfolio.CreatedAt,
+            UpdatedAt = portfolio.UpdatedAt
+        });
+    }
 }

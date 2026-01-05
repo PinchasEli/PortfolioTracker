@@ -44,12 +44,25 @@ public class PortfolioController : BaseApiController
         var result = await _portfolioService.GetAllAsync(customerId, paginationRequest);
         return HandleResult(result);
     }
-    
+
     [HttpGet("{portfolioId}")]
     [Authorize(Policy = RolePolicies.RequireCustomer)]
     public async Task<IActionResult> GetById(Guid customerId, Guid portfolioId)
     {
         var result = await _portfolioService.GetByIdAsync(customerId, portfolioId);
+        return HandleResult(result);
+    }
+
+    [HttpPatch("{portfolioId}")]
+    [Authorize(Policy = RolePolicies.RequireCustomer)]
+    public async Task<IActionResult> Patch(Guid customerId, Guid portfolioId, PatchPortfolioRequest request)
+    {
+        var validator = new PatchPortfolioRequestValidator();
+        var validationResult = validator.Validate(request);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var result = await _portfolioService.PatchAsync(customerId, portfolioId, request);
         return HandleResult(result);
     }
 }
