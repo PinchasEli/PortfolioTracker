@@ -36,12 +36,20 @@ public class PortfolioController : BaseApiController
         var result = await _portfolioService.CreateAsync(customerId, request);
         return HandleResult(result);
     }
-    
+
     [HttpGet]
     [Authorize(Policy = RolePolicies.RequireCustomer)]
     public async Task<IActionResult> GetAll(Guid customerId, [FromQuery] PaginationRequest paginationRequest)
     {
         var result = await _portfolioService.GetAllAsync(customerId, paginationRequest);
+        return HandleResult(result);
+    }
+    
+    [HttpGet("{portfolioId}")]
+    [Authorize(Policy = RolePolicies.RequireCustomer)]
+    public async Task<IActionResult> GetById(Guid customerId, Guid portfolioId)
+    {
+        var result = await _portfolioService.GetByIdAsync(customerId, portfolioId);
         return HandleResult(result);
     }
 }

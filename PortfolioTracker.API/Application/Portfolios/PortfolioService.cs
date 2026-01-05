@@ -13,11 +13,32 @@ public class PortfolioService : IPortfolioService
 {
     private readonly ApplicationDbContext _context;
     private readonly IAuthorizationService _authService;
+    private readonly ILogger<PortfolioService> _logger;
 
-    public PortfolioService(ApplicationDbContext context, IAuthorizationService authorizationService)
+    public PortfolioService(ApplicationDbContext context, IAuthorizationService authorizationService, ILogger<PortfolioService> logger)
     {
         _context = context;
         _authService = authorizationService;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Validates customer exists and user has authorization to access it
+    /// </summary>
+    private async Task<ServiceResult<Customer>> ValidateCustomerAccessAsync(Guid customerId)
+    {
+        var currentUserId = _authService.GetCurrentUserId();
+        var isAdminOrAbove = _authService.IsAtLeastRole(Role.Admin);
+
+        var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Id == customerId);
+
+        if (customer == null)
+            return ServiceResult.Fail<Customer>("Customer not found", 404);
+
+        if (!isAdminOrAbove && customer.UserId != currentUserId)
+            return ServiceResult.Fail<Customer>("Access denied", 403);
+
+        return ServiceResult.Ok(customer);
     }
 
     public async Task<ServiceResult<PortfolioResponse>> CreateAsync(Guid customerId, CreatePortfolioRequest request)
@@ -78,16 +99,12 @@ public class PortfolioService : IPortfolioService
 
     public async Task<ServiceResult<PaginatedResponse<PortfolioResponse>>> GetAllAsync(Guid customerId, PaginationRequest paginationRequest)
     {
-        var currentUserId = _authService.GetCurrentUserId();
-        var isAdminOrAbove = _authService.IsAtLeastRole(Role.Admin);
+        // Validate customer access
+        var validationResult = await ValidateCustomerAccessAsync(customerId);
+        if (!validationResult.Success)
+            return ServiceResult.Fail<PaginatedResponse<PortfolioResponse>>(validationResult.ErrorMessage!, validationResult.StatusCode ?? 400);
 
-        var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Id == customerId);
-
-        if (customer == null)
-            return ServiceResult.Fail<PaginatedResponse<PortfolioResponse>>("Customer not found", 404);
-
-        if (!isAdminOrAbove && customer.UserId != currentUserId)
-            return ServiceResult.Fail<PaginatedResponse<PortfolioResponse>>("Access denied", 403);
+        var customer = validationResult.Data!;
 
         // Get portfolios for the customer with pagination
         var portfoliosQuery = _context.Portfolios
@@ -111,4 +128,28 @@ public class PortfolioService : IPortfolioService
         return ServiceResult.Ok(paginatedResult);
     }
 
+    public async Task<ServiceResult<PortfolioResponse>> GetByIdAsync(Guid customerId, Guid portfolioId)
+    {
+        // Validate customer access
+        var validationResult = await ValidateCustomerAccessAsync(customerId);
+        if (!validationResult.Success)
+            return ServiceResult.Fail<PortfolioResponse>(validationResult.ErrorMessage!, validationResult.StatusCode ?? 400);
+
+        var portfolio = await _context.Portfolios
+            .FirstOrDefaultAsync(p => p.Id == portfolioId && p.CustomerId == customerId);
+
+        if (portfolio == null)
+            return ServiceResult.Fail<PortfolioResponse>("Portfolio not found", 404);
+
+        return ServiceResult.Ok(new PortfolioResponse
+        {
+            Id = portfolio.Id,
+            Name = portfolio.Name,
+            Exchange = portfolio.Exchange,
+            BaseCurrency = portfolio.BaseCurrency,
+            Active = portfolio.Active,
+            CreatedAt = portfolio.CreatedAt,
+            UpdatedAt = portfolio.UpdatedAt
+        });
+    }
 }
