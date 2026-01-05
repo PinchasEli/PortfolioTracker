@@ -6,6 +6,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Application.Customers;
 using Application.Auth;
+using Application.Portfolios;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -115,6 +116,7 @@ builder.Services.AddHttpContextAccessor();
 
 // Add Application Services
 builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IPortfolioService, PortfolioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<Infrastructure.Authorization.IAuthorizationService, Infrastructure.Authorization.AuthorizationService>();

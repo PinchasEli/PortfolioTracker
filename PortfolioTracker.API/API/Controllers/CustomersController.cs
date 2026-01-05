@@ -11,7 +11,7 @@ namespace API.Controllers;
 [ApiController]
 [Route("api/customers")]
 [Authorize] // require authentication for all endpoints in this controller
-public class CustomersController : ControllerBase
+public class CustomersController : BaseApiController
 {
     private readonly ILogger<CustomersController> _logger;
     private readonly ICustomerService _customerService;
@@ -36,11 +36,7 @@ public class CustomersController : ControllerBase
             return BadRequest(validationResult.Errors);
 
         var result = await _customerService.CreateAsync(request);
-
-        if (!result.Success)
-            return BadRequest(result.ErrorMessage);
-
-        return Ok(result.Data);
+        return HandleResult(result);
     }
 
     /// <summary>
@@ -51,10 +47,7 @@ public class CustomersController : ControllerBase
     public async Task<IActionResult> GetCustomers([FromQuery] PaginationRequest paginationRequest)
     {
         var result = await _customerService.GetAllAsync(paginationRequest);
-        if (!result.Success)
-            return BadRequest(result.ErrorMessage);
-
-        return Ok(result.Data);
+        return HandleResult(result);
     }
 
     /// <summary>
@@ -65,10 +58,7 @@ public class CustomersController : ControllerBase
     public async Task<IActionResult> GetCustomerById(Guid id)
     {
         var result = await _customerService.GetByIdAsync(id);
-        if (!result.Success)
-            return NotFound(result.ErrorMessage);
-
-        return Ok(result.Data);
+        return HandleResult(result);
     }
 
     /// <summary>
@@ -85,11 +75,7 @@ public class CustomersController : ControllerBase
             return BadRequest(validationResult.Errors);
 
         var result = await _customerService.UpdateAsync(id, request);
-
-        if (!result.Success)
-            return BadRequest(result.ErrorMessage);
-
-        return Ok(result.Data);
+        return HandleResult(result);
     }
 
     /// <summary>
@@ -106,10 +92,6 @@ public class CustomersController : ControllerBase
             return BadRequest(validationResult.Errors);
 
         var result = await _customerService.PatchAsync(id, request);
-
-        if (!result.Success)
-            return BadRequest(result.ErrorMessage);
-
-        return Ok(result.Data);
+        return HandleResult(result);
     }
 }
