@@ -101,3 +101,38 @@ Content-Type: application/json
 }
 
 ###
+
+# ========== BACKOFFICE ENDPOINTS ==========
+
+# Login as Admin (use actual admin credentials)
+POST {{PortfolioTracker.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "AdminPassword123!"
+}
+
+###
+
+# BO - Get All Portfolios (Admin only)
+# Copy token from login response above
+GET {{PortfolioTracker.API_HostAddress}}/bo/api/portfolios?pageNumber=1&pageSize=10
+Authorization: Bearer YOUR_TOKEN_HERE
+Accept: application/json
+
+###
+
+# BO - Get All Portfolios - Page 2
+GET {{PortfolioTracker.API_HostAddress}}/bo/api/portfolios?pageNumber=2&pageSize=5
+Authorization: Bearer YOUR_TOKEN_HERE
+Accept: application/json
+
+###
+
+# BO - Get All Portfolios - Default pagination
+GET {{PortfolioTracker.API_HostAddress}}/bo/api/portfolios
+Authorization: Bearer YOUR_TOKEN_HERE
+Accept: application/json
+
+###

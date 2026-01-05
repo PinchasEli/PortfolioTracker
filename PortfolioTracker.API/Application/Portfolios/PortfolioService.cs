@@ -173,7 +173,7 @@ public class PortfolioService : IPortfolioService
         {
             if (!_authService.IsAtLeastRole(Role.Admin))
                 return ServiceResult.Fail<PortfolioResponse>("Access denied", 403);
-            
+
             portfolio.Active = request.Active.Value;
         }
 
@@ -189,5 +189,34 @@ public class PortfolioService : IPortfolioService
             CreatedAt = portfolio.CreatedAt,
             UpdatedAt = portfolio.UpdatedAt
         });
+    }
+
+    public async Task<ServiceResult<PaginatedResponse<BOPortfolioResponse>>> BOGetAllAsync(PaginationRequest paginationRequest)
+    {
+        if (!_authService.IsAtLeastRole(Role.Admin))
+            return ServiceResult.Fail<PaginatedResponse<BOPortfolioResponse>>("Access denied", 403);
+
+        var portfoliosQuery = _context.Portfolios
+            .Include(p => p.Customer)
+            .OrderByDescending(p => p.CreatedAt)
+            .ThenBy(p => p.Customer.FullName)
+            .ThenByDescending(p => p.Active);
+
+        var paginatedResult = await portfoliosQuery.ToPaginatedResponseAsync(
+            paginationRequest,
+            p => new BOPortfolioResponse
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Exchange = p.Exchange,
+                BaseCurrency = p.BaseCurrency,
+                Active = p.Active,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                CustomerId = p.CustomerId,
+                CustomerName = p.Customer.FullName
+            });
+
+        return ServiceResult.Ok(paginatedResult);
     }
 }

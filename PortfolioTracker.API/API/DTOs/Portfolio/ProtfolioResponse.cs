@@ -12,3 +12,9 @@ public class PortfolioResponse
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
+
+public class BOPortfolioResponse : PortfolioResponse
+{
+    public Guid CustomerId { get; set; }
+    public string CustomerName { get; set; } = string.Empty;
+}
