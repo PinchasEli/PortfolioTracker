@@ -191,19 +191,81 @@ public class PortfolioService : IPortfolioService
         });
     }
 
-    public async Task<ServiceResult<PaginatedResponse<BOPortfolioResponse>>> BOGetAllAsync(PaginationRequest paginationRequest)
+    public async Task<ServiceResult<PaginatedResponse<BOPortfolioResponse>>> BOGetAllAsync(BOPortfolioQueryRequest queryRequest)
     {
         if (!_authService.IsAtLeastRole(Role.Admin))
             return ServiceResult.Fail<PaginatedResponse<BOPortfolioResponse>>("Access denied", 403);
 
         var portfoliosQuery = _context.Portfolios
             .Include(p => p.Customer)
-            .OrderByDescending(p => p.CreatedAt)
-            .ThenBy(p => p.Customer.FullName)
-            .ThenByDescending(p => p.Active);
+            .AsQueryable();
+
+        // Apply filters
+        if (queryRequest.Active.HasValue)
+        {
+            portfoliosQuery = portfoliosQuery.Where(p => p.Active == queryRequest.Active.Value);
+        }
+
+        if (queryRequest.Exchange.HasValue)
+        {
+            portfoliosQuery = portfoliosQuery.Where(p => p.Exchange == queryRequest.Exchange.Value);
+        }
+
+        if (queryRequest.BaseCurrency.HasValue)
+        {
+            portfoliosQuery = portfoliosQuery.Where(p => p.BaseCurrency == queryRequest.BaseCurrency.Value);
+        }
+
+        if (queryRequest.CustomerId.HasValue)
+        {
+            portfoliosQuery = portfoliosQuery.Where(p => p.CustomerId == queryRequest.CustomerId.Value);
+        }
+
+        // Apply search
+        if (!string.IsNullOrWhiteSpace(queryRequest.Search))
+        {
+            var searchTerm = queryRequest.Search.ToLower().Trim();
+            portfoliosQuery = portfoliosQuery.Where(p => 
+                p.Name.ToLower().Contains(searchTerm) || 
+                p.Customer.FullName.ToLower().Contains(searchTerm));
+        }
+
+        // Apply sorting
+        var isAscending = queryRequest.SortOrder == SortOrder.Asc;
+
+        portfoliosQuery = queryRequest.SortBy switch
+        {
+            BOPortfolioSortField.Name => isAscending 
+                ? portfoliosQuery.OrderBy(p => p.Name)
+                : portfoliosQuery.OrderByDescending(p => p.Name),
+            
+            BOPortfolioSortField.Customer => isAscending 
+                ? portfoliosQuery.OrderBy(p => p.Customer.FullName)
+                : portfoliosQuery.OrderByDescending(p => p.Customer.FullName),
+            
+            BOPortfolioSortField.Exchange => isAscending 
+                ? portfoliosQuery.OrderBy(p => p.Exchange)
+                : portfoliosQuery.OrderByDescending(p => p.Exchange),
+            
+            BOPortfolioSortField.BaseCurrency => isAscending 
+                ? portfoliosQuery.OrderBy(p => p.BaseCurrency)
+                : portfoliosQuery.OrderByDescending(p => p.BaseCurrency),
+            
+            BOPortfolioSortField.Active => isAscending 
+                ? portfoliosQuery.OrderBy(p => p.Active)
+                : portfoliosQuery.OrderByDescending(p => p.Active),
+            
+            BOPortfolioSortField.UpdatedAt => isAscending 
+                ? portfoliosQuery.OrderBy(p => p.UpdatedAt)
+                : portfoliosQuery.OrderByDescending(p => p.UpdatedAt),
+            
+            BOPortfolioSortField.CreatedAt or _ => isAscending 
+                ? portfoliosQuery.OrderBy(p => p.CreatedAt)
+                : portfoliosQuery.OrderByDescending(p => p.CreatedAt),
+        };
 
         var paginatedResult = await portfoliosQuery.ToPaginatedResponseAsync(
-            paginationRequest,
+            queryRequest,
             p => new BOPortfolioResponse
             {
                 Id = p.Id,

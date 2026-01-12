@@ -1,10 +1,13 @@
+using Domain.Enums;
+using API.DTOs.Users;
+
 namespace API.DTOs.Auth;
+
 
 public class LoginResponse
 {
     public string Token { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
+    public UserResponse User { get; set; } = new UserResponse();
     public DateTime ExpiresAt { get; set; }
 }
 

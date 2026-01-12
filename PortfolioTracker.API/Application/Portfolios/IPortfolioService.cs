@@ -10,5 +10,5 @@ public interface IPortfolioService
     Task<ServiceResult<PaginatedResponse<PortfolioResponse>>> GetAllAsync(Guid customerId, PaginationRequest paginationRequest);
     Task<ServiceResult<PortfolioResponse>> GetByIdAsync(Guid customerId, Guid portfolioId);
     Task<ServiceResult<PortfolioResponse>> PatchAsync(Guid customerId, Guid portfolioId, PatchPortfolioRequest request);
-    Task<ServiceResult<PaginatedResponse<BOPortfolioResponse>>> BOGetAllAsync(PaginationRequest paginationRequest);
+    Task<ServiceResult<PaginatedResponse<BOPortfolioResponse>>> BOGetAllAsync(BOPortfolioQueryRequest queryRequest);
 }

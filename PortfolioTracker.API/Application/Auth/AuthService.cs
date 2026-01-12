@@ -1,4 +1,6 @@
 using API.DTOs.Auth;
+using API.DTOs.Customers;
+using API.DTOs.Users;
 using Application.Common;
 using Infrastructure.Persistence;
 using Infrastructure.Security;
@@ -27,6 +29,7 @@ public class AuthService : IAuthService
     {
         // Find user by email
         var user = await _context.Users
+            .Include(u => u.Customer)
             .FirstOrDefaultAsync(u => u.Email == request.Email);
 
         if (user == null)
@@ -53,9 +56,22 @@ public class AuthService : IAuthService
         var response = new LoginResponse
         {
             Token = token,
-            Email = user.Email,
-            Role = user.Role.ToString(),
-            ExpiresAt = expiresAt
+            ExpiresAt = expiresAt,
+            User = new UserResponse
+            {
+                Id = user.Id,
+                Email = user.Email,
+                Role = user.Role,
+                Active = user.Active,
+                Customer = user.Customer != null ? new CustomerResponse
+                {
+                    Id = user.Customer.Id,
+                    FullName = user.Customer.FullName,
+                    Email = user.Customer.User.Email,
+                    Role = user.Role.ToString(),
+                    Active = user.Active
+                } : null
+            }
         };
 
         return ServiceResult<LoginResponse>.Ok(response);

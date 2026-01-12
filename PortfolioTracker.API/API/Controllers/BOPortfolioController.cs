@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using API.DTOs.Common;
+using API.DTOs.Portfolio;
 using Application.Portfolios;
 using Infrastructure.Authorization;
 
@@ -21,9 +21,9 @@ public class BOPortfolioController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] PaginationRequest paginationRequest)
+    public async Task<IActionResult> GetAll([FromQuery] BOPortfolioQueryRequest queryRequest)
     {
-        var result = await _portfolioService.BOGetAllAsync(paginationRequest);
+        var result = await _portfolioService.BOGetAllAsync(queryRequest);
         return HandleResult(result);
     }
 }
