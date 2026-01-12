@@ -110,3 +110,4 @@ $RECYCLE.BIN/
 appsettings.Development.json
 *.env
 
+scripts/
